@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>面向对象贪吃蛇</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            background: rgb(162, 186, 103);
+        }
+        #wall {
+            margin: 100px auto 0;
+            background: linear-gradient(to top, #eae65d, #abea95, #896360);
+            box-shadow: 0 0 2px 2px rgba(0, 0, 0, 0.53);
+            position: relative;
+        }
+        .createBody {
+            width: 20px;
+            height: 20px;
+            background: #fffdf5;
+            position: absolute;
+            box-shadow: 0 0 1px 1px #000000 inset;
+        }
+        #yel {
+            background: #a2ba67;
+        }
+        .createFood {
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            border-radius: 10px;
+            width: 20px;
+            height: 20px;
+            position: absolute;
+            box-shadow: 0 0 1px 1px #000000 inset;
+            background: #fffdf5;
+        }
+        .bord {
+            -webkit-border-radius: 10px 10px 0 0;
+            -moz-border-radius: 10px 10px 0 0;
+            border-radius: 10px 10px 0 0;
+            -webkit-box-shadow: 0 1px 2px 1px grey;
+            -moz-box-shadow: 0 1px 2px 1px grey;
+            box-shadow: 0 1px 2px 1px grey;
+            width: 150px;
+            font-size: 40px;
+            color: #a31d42;
+            text-align: center;
+            border-style: solid;
+            border-width: 0 1px 1px;
+            border-color: #c5c6b9 #808080;
+        }
+        .bord:first-child {
+            position: absolute;
+            top: 0;
+            left: 110%;
+        }
+        .bord:nth-child(2) {
+            position: absolute;
+            bottom: 0;
+            left: 110%;
+        }
+        #score, #level {
+            height: 80px;
+            line-height: 80px;
+        }
+        .word {
+            -webkit-border-radius: 10px 10px 0 0;
+            -moz-border-radius: 10px 10px 0 0;
+            border-radius: 10px 10px 0 0;
+            background: #eae65d;
+            height: 30px;
+            line-height: 30px;
+            font-size: 18px;
+        }
+        .int {
+            margin-left: 10px;
+            color: #000;
+            width: 300px;
+            height: 400px;
+            font-size: 30px;
+            float: left;
+
+        }
+        .int span {
+            width: 200px;
+            display: inline-block;
+        }
+        @keyframes add {
+            0% {
+                font-size: 80px;
+            }
+            100% {
+                font-size: 40px;
+            }
+        }
+        .foot{
+            text-align: center;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+<div class="int">
+    <p><span>to top</span>↑</p>
+    <p><span>to bottom </span>↓</p>
+    <p><span>to left </span>←</p>
+    <p><span>to right</span> →</p>
+    <p><span>stop</span>space</p>
+</div>
+<div id="wall">
+    <div class="bord">
+        <div class="word">score</div>
+        <div id="score">0</div>
+    </div>
+    <div class="bord">
+        <div class="word">level</div>
+        <div id="level">1</div>
+    </div>
+</div>
+<div class="foot">
+    代码出处：youngHeart9506 CSDN blog
+</div>
+</body>
+<script>
+    var oWall = document.getElementById('wall');
+    var oInsert = document.getElementById('insert');
+    var wallWidth = 700;
+    var wallHeight = 400;
+    oWall.style.width = wallWidth + 'px';
+    oWall.style.height = wallHeight + 'px';
+    var snake = {
+        aSnake: [],
+        size: 20,
+        top: 200,
+        left: 400,
+        speed: 250,
+        level: 1,
+        len: 3,//长度默认3个单位
+        direction: 'left',//方向默认向左走
+        create: function () {//创建初始蛇
+            for (var i = 0; i < snake.len; i++) {
+                var left = snake.left + snake.size * i;
+                var top = snake.top;
+                var oDiv = document.createElement('div');
+                oDiv.style.left = left + 'px';
+                oDiv.style.top = top + 'px';
+                oDiv.className = 'createBody';
+                oWall.appendChild(oDiv);
+                snake.aSnake.push(oDiv);
+            }
+            snake.aSnake[0].id = 'yel'
+        },
+        move: function () {
+            //移动时 遍历蛇的身体div 设置的位置等于前一个的位置
+            for (var b = snake.aSnake.length - 1; b > 0; b--) {
+                var s = snake.aSnake[b];
+                var s2 = snake.aSnake[b - 1];
+                s.style.left = s2.style.left;
+                s.style.top = s2.style.top;
+            }
+            var fstS = snake.aSnake[1];
+            var addS = snake.aSnake[0];
+            if (snake.direction == 'left')
+                addS.style.left = parseInt(fstS.style.left) - snake.size + 'px';
+            else if (snake.direction == 'right')
+                addS.style.left = parseInt(fstS.style.left) + snake.size + 'px';
+            else if (snake.direction == 'top')
+                addS.style.top = parseInt(fstS.style.top) - snake.size + 'px';
+            else if (snake.direction == 'bottom')
+                addS.style.top = parseInt(fstS.style.top) + snake.size + 'px';
+            snake.check();
+            snake.eat();
+        },
+        check: function () {
+//          检查蛇头部的位置（死亡 吃东西）
+            var fstS = snake.aSnake[0];
+            var sLeft = parseInt(fstS.style.left);
+            var sTop = parseInt(fstS.style.top);
+            if (sLeft <= -snake.size || sLeft >= wallWidth || sTop <= -snake.size || sTop >= wallHeight) {
+                clearInterval(snake.move);
+                var M = confirm('撞到墙上了,游戏结束！是否重新开始？');
+                if (M) {
+                    document.location.reload();
+                } else {
+                    game.stop();
+                }
+                return;//检验是否撞到墙上了
+            }
+            for (var c = 1; c < snake.aSnake.length; c++) {
+                var sb = snake.aSnake[c];
+                if (sLeft == parseInt(sb.style.left) && sTop == parseInt(sb.style.top)) {
+                    clearInterval(snake.move);
+                    var N = confirm('撞到自己了，游戏结束！是否重新开始？');
+                    if (N) {
+                        document.location.reload();
+                    } else {
+                        game.stop();
+                    }
+                    return;
+                }
+            }
+        },
+        grow: function () {
+            var level = document.getElementById('level');
+            var score = document.getElementById('score');
+            var aBody = snake.aSnake.length;
+            var inner = score.innerHTML;
+            if (aBody != snake.len) {
+                score.innerHTML = (aBody - snake.len) * snake.level * 10;
+            }
+            level.className = '';
+            if (aBody > 15) {
+                snake.level = 2;
+            } else if (aBody > 40) {
+                snake.level = 3;
+            }
+            if (snake.level != level.innerHTML) {
+                level.innerHTML = snake.level;
+            }
+            var fstS = snake.aSnake[snake.aSnake.length - 2];
+            var addS = snake.aSnake[snake.aSnake.length - 1];
+            addS.style.left = parseInt(fstS.style.left) + 'px';
+            addS.style.top = parseInt(fstS.style.top) + 'px';
+            return snake.level;
+        },
+        eat: function () {
+            var food = document.getElementsByClassName('createFood')[0];
+            var fstS = snake.aSnake[0];
+            var fLeft = parseInt(food.style.left);
+            var fTop = parseInt(food.style.top);
+            var sLeft = parseInt(fstS.style.left);
+            var sTop = parseInt(fstS.style.top);
+            if (fLeft == sLeft && sTop == fTop) {
+                snake.aSnake.push(food);
+                food.className = 'createBody';
+                snake.grow();
+                var ofood = new Food();
+                ofood.create();
+                return snake.aSnake;
+            }
+        }
+    };
+    function Food() {
+    }
+    Food.prototype.default = function () {
+        var left = 300;
+        var top = 200;
+        var oDiv = document.createElement('div');
+        oDiv.style.left = left + 'px';
+        oDiv.style.top = top + 'px';
+        oDiv.className = 'createFood';
+        oWall.appendChild(oDiv);
+    };
+    Food.prototype.create = function () {
+        var left = Math.floor(Math.random() * (wallWidth / snake.size)) * snake.size;
+        var top = Math.floor(Math.random() * (wallHeight / snake.size)) * snake.size;
+        for (var i = 0; i < snake.aSnake.length; i++) {
+            var s = snake.aSnake[i];
+            if (left == parseInt(s.style.left) && top == parseInt(s.style.top)) {
+                var food = new Food();
+                food.create();
+                return;
+            }
+            var oDiv = document.createElement('div');
+            oDiv.style.left = left + 'px';
+            oDiv.style.top = top + 'px';
+            oDiv.className = 'createFood';
+        }
+        oWall.appendChild(oDiv);
+    };
+    var game = {
+        inter: 'inter',
+        init: function () {//游戏初始化
+            var food = new Food();
+            food.default();//生成定位食物
+            snake.create();//生成蛇
+            document.onkeyup = function (event) {
+                var code = event.keyCode;
+                if (code == 37 && snake.direction != "right") {
+                    snake.move();
+                    game.stop();
+                    snake.direction = "left";
+                    game.start();
+                }
+                if (code == 38 && snake.direction != "bottom") {
+                    snake.move();
+                    game.stop();
+                    snake.direction = "top";
+                    game.start();
+                }
+                if (code == 39 && snake.direction != "left") {
+                    snake.move();
+                    game.stop();
+                    snake.direction = "right";
+                    game.start();
+                }
+                if (code == 40 && snake.direction != "top") {
+                    snake.move();
+                    game.stop();
+                    snake.direction = "bottom";
+                    game.start();
+                }
+                if (code == 32) {
+                    game.stop();
+                }
+            };
+        },
+        start: function () {
+            game.inter = setInterval(snake.move, snake.speed / snake.level);
+        },
+        stop: function () {
+            clearInterval(game.inter)
+        }
+    };
+    window.onload = function () {
+        game.init();
+    };
+</script>
+</html>
